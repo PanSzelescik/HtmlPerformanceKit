@@ -30,6 +30,55 @@ internal class BufferReader : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal ReadOnlySpan<char> PeekAvailable()
+    {
+        if (peekBuffer.Count != 0)
+        {
+            return ReadOnlySpan<char>.Empty;
+        }
+
+        if (inputBufferIndex == inputBufferLength)
+        {
+            inputBufferLength = textReader.Read(inputBuffer, 0, inputBuffer.Length);
+            inputBufferIndex = 0;
+        }
+
+        return inputBuffer.AsSpan(inputBufferIndex, inputBufferLength - inputBufferIndex);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void AdvanceAvailable(int length)
+    {
+        var consumed = inputBuffer.AsSpan(inputBufferIndex, length);
+
+        if (LineNumber == 0)
+        {
+            LineNumber = 1;
+            LinePosition = 1;
+        }
+
+        var lastNewLine = consumed.LastIndexOf('\n');
+        if (lastNewLine < 0)
+        {
+            LinePosition += length;
+        }
+        else
+        {
+            for (var index = 0; index <= lastNewLine; index++)
+            {
+                if (consumed[index] == '\n')
+                {
+                    LineNumber++;
+                }
+            }
+
+            LinePosition = length - lastNewLine;
+        }
+
+        inputBufferIndex += length;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ReadOnlyMemory<char> Peek(int length)
     {
         while (peekBuffer.Count < length)

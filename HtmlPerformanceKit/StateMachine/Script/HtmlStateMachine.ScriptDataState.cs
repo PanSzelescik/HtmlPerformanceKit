@@ -29,6 +29,20 @@ internal partial class HtmlStateMachine
     {
         while (true)
         {
+            var available = bufferReader.PeekAvailable();
+            if (available.IsEmpty == false)
+            {
+                var specialCharacterIndex = available.IndexOfAny('<', HtmlChar.Null);
+                var plainTextLength = specialCharacterIndex < 0 ? available.Length : specialCharacterIndex;
+
+                if (plainTextLength > 0)
+                {
+                    currentDataBuffer.AddRange(available.Slice(0, plainTextLength));
+                    bufferReader.AdvanceAvailable(plainTextLength);
+                    continue;
+                }
+            }
+
             var currentInputCharacter = bufferReader.Consume();
 
             switch (currentInputCharacter)

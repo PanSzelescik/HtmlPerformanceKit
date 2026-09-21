@@ -63,6 +63,18 @@ internal class CharBuffer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void AddRange(ReadOnlySpan<char> span)
+    {
+        while (Length + span.Length > buffer.Length)
+        {
+            Array.Resize(ref buffer, buffer.Length * 2);
+        }
+
+        span.CopyTo(buffer.AsSpan(Length));
+        Length += span.Length;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void AddRange(HtmlChar htmlChar)
     {
         var length = htmlChar.Length;

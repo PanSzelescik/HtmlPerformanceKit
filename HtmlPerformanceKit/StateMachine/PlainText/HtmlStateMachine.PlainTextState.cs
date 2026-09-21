@@ -24,6 +24,20 @@ internal partial class HtmlStateMachine
     /// </summary>
     private void PlainTextStateImplementation()
     {
+        var available = bufferReader.PeekAvailable();
+        if (available.IsEmpty == false)
+        {
+            var nullCharacterIndex = available.IndexOf(HtmlChar.Null);
+            var plainTextLength = nullCharacterIndex < 0 ? available.Length : nullCharacterIndex;
+
+            if (plainTextLength > 0)
+            {
+                currentDataBuffer.AddRange(available.Slice(0, plainTextLength));
+                bufferReader.AdvanceAvailable(plainTextLength);
+                return;
+            }
+        }
+
         var currentInputCharacter = bufferReader.Consume();
 
         switch (currentInputCharacter)

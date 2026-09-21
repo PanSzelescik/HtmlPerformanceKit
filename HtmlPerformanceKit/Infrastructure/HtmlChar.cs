@@ -7,7 +7,7 @@ internal readonly struct HtmlChar
 {
     internal const char Null = '\0';
     internal const char ReplacementCharacter = '\uFFFD';
-    internal static readonly HtmlChar Nothing = new HtmlChar('\0', '\0');
+    internal static readonly HtmlChar Nothing = new HtmlChar(Null, Null);
     internal static HtmlChar ReplacementCharacterHtmlChar = new HtmlChar('\uFFFD');
     private static readonly Dictionary<ReadOnlyMemory<char>, HtmlChar> HtmlCharacterReferences = new Dictionary<ReadOnlyMemory<char>, HtmlChar>(ReadOnlyMemoryComparer.Instance)
     {
@@ -2247,7 +2247,7 @@ internal readonly struct HtmlChar
     private readonly char char1;
     private readonly char char2;
 
-    internal HtmlChar(char char1) : this(char1, '\0')
+    internal HtmlChar(char char1) : this(char1, Null)
     {
     }
 
@@ -2257,7 +2257,7 @@ internal readonly struct HtmlChar
         this.char2 = char2;
     }
 
-    internal int Length => char1 == '\0' ? 0 : char2 == '\0' ? 1 : 2;
+    internal int Length => char1 == Null ? 0 : char2 == Null ? 1 : 2;
 
     internal static HtmlChar GetCharactersByCharacterReference(ReadOnlyMemory<char> characterReference)
     {
@@ -2383,14 +2383,14 @@ internal readonly struct HtmlChar
 
     internal void CopyTo(char[] destination, int destinationIndex)
     {
-        if (char1 == '\0')
+        if (char1 == Null)
         {
             return;
         }
 
         destination[destinationIndex++] = char1;
 
-        if (char2 != '\0')
+        if (char2 != Null)
         {
             destination[destinationIndex] = char2;
         }
