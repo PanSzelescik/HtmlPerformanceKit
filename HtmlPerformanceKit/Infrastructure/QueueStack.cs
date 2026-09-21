@@ -10,12 +10,14 @@ internal class QueueStack
     private int firstIndex;
     private int lastIndex;
     private int[] items;
+    private char[] memoryItems;
     private char[] copyBuffer;
 
     internal QueueStack(int capacity)
     {
         Capacity = capacity;
         items = new int[capacity];
+        memoryItems = new char[capacity];
         copyBuffer = new char[capacity];
     }
 
@@ -40,12 +42,14 @@ internal class QueueStack
         }
 
         items[firstIndex] = item;
+        memoryItems[firstIndex] = (char)item;
         Count++;
     }
 
     internal void Enqueue(int item)
     {
         items[lastIndex] = item;
+        memoryItems[lastIndex] = (char)item;
         Count++;
 
         if (lastIndex == Capacity - 1)
@@ -106,19 +110,17 @@ internal class QueueStack
     {
         if (firstIndex < lastIndex)
         {
-            var copyBufferIndex = 0;
-            for (var index = firstIndex; index < lastIndex; index++, copyBufferIndex++)
+            var length = lastIndex - firstIndex;
+            for (var index = firstIndex; index < lastIndex; index++)
             {
-                var read = items[index];
-                if (read == -1)
+                if (items[index] == -1)
                 {
+                    length = index - firstIndex;
                     break;
                 }
-
-                copyBuffer[copyBufferIndex] = (char)read;
             }
 
-            return new ReadOnlyMemory<char>(copyBuffer, 0, copyBufferIndex);
+            return new ReadOnlyMemory<char>(memoryItems, firstIndex, length);
         }
 
         var copyBufferIndex2 = 0;
@@ -130,7 +132,7 @@ internal class QueueStack
                 return new ReadOnlyMemory<char>(copyBuffer, 0, copyBufferIndex2);
             }
 
-            copyBuffer[copyBufferIndex2] = (char)read;
+            copyBuffer[copyBufferIndex2] = memoryItems[index];
         }
 
         for (var index = 0; index < firstIndex; index++, copyBufferIndex2++)
@@ -141,7 +143,7 @@ internal class QueueStack
                 break;
             }
 
-            copyBuffer[copyBufferIndex2] = (char)read;
+            copyBuffer[copyBufferIndex2] = memoryItems[index];
         }
 
         return new ReadOnlyMemory<char>(copyBuffer, 0, copyBufferIndex2);
@@ -151,15 +153,19 @@ internal class QueueStack
     {
         var newCapacity = Capacity * 2;
         var newItems = new int[newCapacity];
+        var newMemoryItems = new char[newCapacity];
 
         if (firstIndex < lastIndex)
         {
             Array.Copy(items, newItems, items.Length);
+            Array.Copy(memoryItems, newMemoryItems, memoryItems.Length);
         }
         else
         {
             Array.Copy(items, firstIndex, newItems, 0, Capacity - firstIndex);
             Array.Copy(items, 0, newItems, Capacity - firstIndex, lastIndex);
+            Array.Copy(memoryItems, firstIndex, newMemoryItems, 0, Capacity - firstIndex);
+            Array.Copy(memoryItems, 0, newMemoryItems, Capacity - firstIndex, lastIndex);
             firstIndex = 0;
             lastIndex = Count;
         }
@@ -167,5 +173,6 @@ internal class QueueStack
         Capacity = newCapacity;
         copyBuffer = new char[newCapacity];
         items = newItems;
+        memoryItems = newMemoryItems;
     }
 }

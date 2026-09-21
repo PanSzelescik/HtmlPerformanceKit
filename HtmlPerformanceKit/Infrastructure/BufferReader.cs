@@ -6,8 +6,14 @@ namespace HtmlPerformanceKit.Infrastructure;
 
 internal class BufferReader : IDisposable
 {
+    private const int InputBufferSize = 4096;
+
+    private readonly char[] inputBuffer = new char[InputBufferSize];
     private readonly TextReader textReader;
     private readonly QueueStack peekBuffer = new QueueStack(64);
+
+    private int inputBufferIndex;
+    private int inputBufferLength;
 
     internal BufferReader(TextReader textReader)
     {
@@ -28,7 +34,7 @@ internal class BufferReader : IDisposable
     {
         while (peekBuffer.Count < length)
         {
-            var currentInputCharacter = textReader.Read();
+            var currentInputCharacter = ReadNextCharacter();
 
             peekBuffer.Enqueue(currentInputCharacter);
             if (currentInputCharacter == -1)
@@ -64,7 +70,7 @@ internal class BufferReader : IDisposable
             LinePosition = 1;
         }
 
-        var result = textReader.Read();
+        var result = ReadNextCharacter();
         if (result == '\n')
         {
             LineNumber++;
@@ -207,9 +213,23 @@ internal class BufferReader : IDisposable
             return peekBuffer.Peek();
         }
 
-        var currentInputCharacter = textReader.Read();
+        var currentInputCharacter = ReadNextCharacter();
         peekBuffer.Enqueue(currentInputCharacter);
 
         return currentInputCharacter;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private int ReadNextCharacter()
+    {
+        if (inputBufferIndex < inputBufferLength)
+        {
+            return inputBuffer[inputBufferIndex++];
+        }
+
+        inputBufferLength = textReader.Read(inputBuffer, 0, inputBuffer.Length);
+        inputBufferIndex = 0;
+
+        return inputBufferLength == 0 ? -1 : inputBuffer[inputBufferIndex++];
     }
 }

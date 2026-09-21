@@ -22,7 +22,7 @@ internal class ReadOnlyMemoryComparer : IEqualityComparer<ReadOnlyMemory<char>>
 
             for (var i = 0; i < span.Length; i++)
             {
-                hash = (hash * 31) + span[i].GetHashCode();
+                hash = (hash * 31) + i.GetHashCode();
             }
 
             return hash;
